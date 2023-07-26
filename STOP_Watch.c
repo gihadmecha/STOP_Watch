@@ -18,8 +18,11 @@ static u8 resetFlag = 0;
 
 void STOP_Watch_segments ()
 {
-	SEGMENTS_left(leftSegment);
-	SEGMENTS_right(rightSegment);
+	//SEGMENTS_left(leftSegment);
+	//SEGMENTS_right(rightSegment);
+	
+	u8 number = leftSegment * 10 + rightSegment;
+	SEGMENTS_STOP_Watch (number);
 }
 
 void STOP_Watch_increaseLeftSegment ()
@@ -80,12 +83,12 @@ void STOP_Watch_pause_resume ()
 
 void STOP_watch_delay_s ()
 {
-	for (u32 index = 0; index < 100000 && modeFlag == 1 && resetFlag == 0; index++)
+	for (u32 index = 0; index < 500 && modeFlag == 1 && resetFlag == 0; index++)
 	{
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_pause_resume);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_reset);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
-		_delay_us(10);
+		STOP_Watch_segments ();
 	}
 }
 
@@ -111,6 +114,7 @@ void STOP_Watch_AdjustMode ()
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_increaseLeftSegment);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_increaseRightSegment);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
+		STOP_Watch_segments ();
 	}
 }
 
@@ -119,15 +123,3 @@ void STOP_Watch_switchMode ()
 	DIO_TogglePin(PIND0);
 	modeFlag = !modeFlag;
 }
-//
-//void STOP_Watch_runMode ()
-//{
-	//if (modeFlag == 1)
-	//{
-		//STOP_Watch_workingMode ();
-	//}
-	//else if (modeFlag == 0)
-	//{
-		//STOP_Watch_AdjustMode ();
-	//}
-//}
