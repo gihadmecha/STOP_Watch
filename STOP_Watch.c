@@ -1,5 +1,7 @@
 
 #include "STOP_Watch.h"
+#include "STOP_Watch_Private.h"
+#include "BUZZER.h"
 
 static u8 leftSegment = 0;
 static u8 rightSegment = 0;
@@ -7,22 +9,23 @@ static u8 rightSegment = 0;
 static u8 setLeftSegment = 0;
 static u8 setRightSegment = 0;
 
-//pause
-static u8 pause_resume_flag = 0;
+static u8 pausePlayFlag = PAUSE;
 
-//working mode
-static u8 modeFlag = 1; 
-
-static u8 resetFlag = 0;
+static u8 modeFlag = WORKING_MODE; 
 
 
-void STOP_Watch_segments ()
+extern void STOP_Watch_Init ()
+{
+	DIO_Init();
+}
+
+static void STOP_Watch_segments ()
 {
 	u8 number = leftSegment * 10 + rightSegment;
 	SEGMENTS_STOP_Watch (number);
 }
 
-void STOP_Watch_increaseLeftSegment ()
+static void STOP_Watch_increaseLeftSegment ()
 {
 	leftSegment++;
 	
@@ -34,7 +37,7 @@ void STOP_Watch_increaseLeftSegment ()
 	setLeftSegment = leftSegment;
 }
 
-void STOP_Watch_increaseRightSegment ()
+static void STOP_Watch_increaseRightSegment ()
 {
 	rightSegment++;
 	
@@ -46,55 +49,60 @@ void STOP_Watch_increaseRightSegment ()
 	setRightSegment = rightSegment;
 }
 
-void STOP_Watch_pause ()
+static void STOP_Watch_pause ()
 {
-	pause_resume_flag = 0;
-	DIO_WritePin(PINC1, LOW);
+	pausePlayFlag = PAUSE;
+	LED1_Off();
 }
 
-void STOP_Watch_pause_resume ()
+static void STOP_Watch_pauseResume ()
 {
-	pause_resume_flag = !pause_resume_flag;
+	pausePlayFlag = !pausePlayFlag;
 	
-	if (pause_resume_flag == 0)
+	if (pausePlayFlag == PAUSE)
 	{
-		DIO_WritePin(PINC1, LOW);
+		LED1_Off();
 	}
 }
 
-void STOP_Watch_reset ()
+static void STOP_Watch_reset ()
 {
 	leftSegment = setLeftSegment;
 	rightSegment = setRightSegment;
-	//pause
 	STOP_Watch_pause ();
-	resetFlag = 1;
 }
 
-void STOP_watch_delay_s ()
+static void STOP_Watch_switchMode ()
 {
-	for (u32 index = 0; index < 250 && modeFlag == 1 && resetFlag == 0; index++)
+	modeFlag = !modeFlag;
+}
+
+static void STOP_watch_delay_s ()
+{
+	for (u32 index = 0; index < 250 && modeFlag == WORKING_MODE; index++)
 	{
-		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_pause_resume);
+		// 4 mSec delay
+		STOP_Watch_segments ();
+		//needed to check periodically
+		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_pauseResume);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_reset);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
-		STOP_Watch_segments ();
 	}
 }
 
-void STOP_Watch_countingDown ()
+static void STOP_Watch_countingDown ()
 {
 	static u8 currentNumber;
 	
 	static u8 oneFlag = 0;
 	
-	if (pause_resume_flag == 1)
+	if (pausePlayFlag == PLAY && modeFlag == WORKING_MODE)
 	{
 		currentNumber = leftSegment * 10 + rightSegment;
 		
 		if (currentNumber != 0)
 		{
-			DIO_WritePin(PINC1, HIGH);
+			LED1_On();
 			
 			currentNumber--;
 			
@@ -108,50 +116,45 @@ void STOP_Watch_countingDown ()
 		}
 		else
 		{
-			DIO_WritePin(PINC1, LOW);
+			LED1_Off();
 			
 			if (oneFlag == 1)
 			{
 				oneFlag = 0;
 				
-				DIO_TogglePin(PINC5);
+				BUZZER_On();
 				STOP_watch_delay_s ();
-				DIO_TogglePin(PINC5);
+				BUZZER_Off();
 			}
 		}
 	}
 }
 
-
-void STOP_Watch_workingMode ()
+static void STOP_Watch_workingMode ()
 {
-	if (modeFlag == 1)
-	{
 		STOP_watch_delay_s ();
-		
-		if (resetFlag == 0)
-		{
-			STOP_Watch_countingDown ();
-		}
-		
-		resetFlag = 0;
-	}
+		STOP_Watch_countingDown ();
 }
 
-void STOP_Watch_AdjustMode ()
+static void STOP_Watch_AdjustMode ()
 {
-	if (modeFlag == 0)
-	{
-		DIO_WritePin(PINC1, LOW);
+		LED1_Off();
 		STOP_Watch_pause ();
+		STOP_Watch_segments ();
+		//needed to check periodically
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_increaseLeftSegment);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_increaseRightSegment);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
-		STOP_Watch_segments ();
-	}
 }
 
-void STOP_Watch_switchMode ()
+extern void STOP_Watch_run ()
 {
-	modeFlag = !modeFlag;
+	if (modeFlag == WORKING_MODE)
+	{
+		STOP_Watch_workingMode ();
+	}
+	else if (modeFlag == ADJUST_MODE)
+	{
+		STOP_Watch_AdjustMode ();
+	}
 }

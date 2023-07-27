@@ -3,19 +3,18 @@
 #ifndef STOP_WATCH_H_
 #define STOP_WATCH_H_
 
-#include "StdTypes.h"
 #include "SEGMENTS.h"
 #include "BUTTON.h"
+#include "LED.h"
 
-void STOP_Watch_segments ();
-void STOP_Watch_increaseLeftSegment ();
-void STOP_Watch_increaseRightSegment ();
-void STOP_Watch_countingDown ();
-void STOP_Watch_reset ();
-void STOP_Watch_pause_resume ();
-void STOP_watch_delay_s ();
-void STOP_Watch_workingMode ();
-void STOP_Watch_AdjustMode ();
-void STOP_Watch_switchMode ();
+#define		PAUSE		0
+#define		PLAY		1
+
+#define		ADJUST_MODE		0
+#define		WORKING_MODE	1
+
+
+extern void STOP_Watch_Init ();
+extern void STOP_Watch_run ();
 
 #endif /* STOP_WATCH_H_ */
