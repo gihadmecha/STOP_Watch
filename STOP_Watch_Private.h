@@ -4,6 +4,17 @@
 #ifndef STOP_WATCH_PRIVATE_H_
 #define STOP_WATCH_PRIVATE_H_
 
+#include "SEGMENTS.h"
+#include "BUTTON.h"
+#include "LED.h"
+#include "BUZZER.h"
+
+#define		PAUSE		0
+#define		PLAY		1
+
+#define		ADJUST_MODE		0
+#define		WORKING_MODE	1
+
 static void STOP_Watch_segments ();
 static void STOP_Watch_increaseLeftSegment ();
 static void STOP_Watch_increaseRightSegment ();

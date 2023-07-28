@@ -1,7 +1,7 @@
 
 #include "STOP_Watch.h"
 #include "STOP_Watch_Private.h"
-#include "BUZZER.h"
+
 
 static u8 leftSegment = 0;
 static u8 rightSegment = 0;
@@ -77,16 +77,18 @@ static void STOP_Watch_switchMode ()
 	modeFlag = !modeFlag;
 }
 
+
+// 1 Sec delay
 static void STOP_watch_delay_s ()
 {
 	for (u32 index = 0; index < 250 && modeFlag == WORKING_MODE; index++)
 	{
-		// 4 mSec delay
-		STOP_Watch_segments ();
-		//needed to check periodically
+		//needed to check periodically at Working Mode
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_pauseResume);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_reset);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
+		// 4 mSec delay
+		STOP_Watch_segments ();
 	}
 }
 
@@ -94,13 +96,16 @@ static void STOP_Watch_countingDown ()
 {
 	static u8 currentNumber;
 	
-	static u8 oneFlag = 0;
+	#define		ZERO	0
+	#define		ONE		1
+	
+	static u8 zeroOneFlag = ZERO;
 	
 	if (pausePlayFlag == PLAY && modeFlag == WORKING_MODE)
 	{
 		currentNumber = leftSegment * 10 + rightSegment;
 		
-		if (currentNumber != 0)
+		if (currentNumber != ZERO)
 		{
 			LED1_On();
 			
@@ -109,23 +114,23 @@ static void STOP_Watch_countingDown ()
 			leftSegment = currentNumber / 10;
 			rightSegment = currentNumber % 10;
 			
-			if (currentNumber == 1)
+			if (currentNumber == ONE)
 			{
-				oneFlag = 1;
+				zeroOneFlag = ONE;
 			}
 		}
-		else
+		else if (currentNumber == ZERO)
 		{
-			LED1_Off();
-			
-			if (oneFlag == 1)
+			if (zeroOneFlag == ONE)
 			{
-				oneFlag = 0;
+				zeroOneFlag = ZERO;
 				
 				BUZZER_On();
 				STOP_watch_delay_s ();
 				BUZZER_Off();
 			}
+			
+			LED1_Off();
 		}
 	}
 }
@@ -140,11 +145,12 @@ static void STOP_Watch_AdjustMode ()
 {
 		LED1_Off();
 		STOP_Watch_pause ();
-		STOP_Watch_segments ();
-		//needed to check periodically
+		//needed to check periodically at Adjust Mode
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_increaseLeftSegment);
 		BUTTON2_IfPressed_PeriodicCheck (STOP_Watch_increaseRightSegment);
 		BUTTON_mode_IfPressed_PeriodicCheck (STOP_Watch_switchMode);
+		// 4 mSec delay
+		STOP_Watch_segments ();
 }
 
 extern void STOP_Watch_run ()
