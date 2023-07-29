@@ -52,17 +52,11 @@ static void STOP_Watch_increaseRightSegment ()
 static void STOP_Watch_pause ()
 {
 	pausePlayFlag = PAUSE;
-	LED1_Off();
 }
 
 static void STOP_Watch_pauseResume ()
 {
 	pausePlayFlag = !pausePlayFlag;
-	
-	if (pausePlayFlag == PAUSE)
-	{
-		LED1_Off();
-	}
 }
 
 static void STOP_Watch_reset ()
@@ -81,7 +75,7 @@ static void STOP_Watch_switchMode ()
 // 1 Sec delay
 static void STOP_watch_delay_s ()
 {
-	for (u32 index = 0; index < 250 && modeFlag == WORKING_MODE; index++)
+	for (u32 index = 0; index < 62 && modeFlag == WORKING_MODE; index++)
 	{
 		//needed to check periodically at Working Mode
 		BUTTON1_IfPressed_PeriodicCheck (STOP_Watch_pauseResume);
@@ -107,8 +101,6 @@ static void STOP_Watch_countingDown ()
 		
 		if (currentNumber != ZERO)
 		{
-			LED1_On();
-			
 			currentNumber--;
 			
 			leftSegment = currentNumber / 10;
@@ -129,16 +121,15 @@ static void STOP_Watch_countingDown ()
 				STOP_watch_delay_s ();
 				BUZZER_Off();
 			}
-			
-			LED1_Off();
 		}
 	}
 }
 
 static void STOP_Watch_workingMode ()
 {
-		STOP_watch_delay_s ();
-		STOP_Watch_countingDown ();
+	LED1_On();
+	STOP_watch_delay_s ();
+	STOP_Watch_countingDown ();
 }
 
 static void STOP_Watch_AdjustMode ()
